@@ -1,0 +1,48 @@
+global oldTrack
+global moodText
+set oldTrack to 0
+
+on isRunning(appName)
+	tell application "System Events" to (name of processes) contains appName
+end isRunning
+
+if not isRunning("Skype") then
+	do shell script "open -a Skype"
+end if
+
+tell application "Skype.app"
+	set oldMood to «event sendskyp» given «class cmnd»:"GET PROFILE RICH_MOOD_TEXT", «class scrp»:"cog2mood"
+end tell
+
+on idle
+	if isRunning("Cog") then
+		tell application "Cog.app"
+			set trackName to «class CoTi» of «class CoCE»
+			set trackArtist to «class CoAr» of «class CoCE»
+			set trackAlbum to «class CoAl» of «class CoCE»
+			set trackYear to «class CoYe» of «class CoCE»
+			
+			if trackName is not oldTrack then
+				set moodText to "<B>I'm now listening to: </B>" & trackName & "<I> by </I>" & trackArtist & "<I> on </I>" & trackAlbum & " (" & trackYear & ")"
+			end if
+		end tell
+	else
+		set moodText to "!_!"
+	end if
+	if isRunning("Skype") then
+		tell application "Skype.app"
+			«event sendskyp» given «class cmnd»:"SET PROFILE RICH_MOOD_TEXT " & moodText, «class scrp»:"cog2mood"
+		end tell
+	end if
+	set oldTrack to trackName
+	return 4
+end idle
+
+on quit
+	if isRunning("Skype") then
+		tell application "Skype.app"
+			«event sendskyp» given «class cmnd»:"SET PROFILE RICH_MOOD_TEXT !__!", «class scrp»:"cog2mood"
+		end tell
+	end if
+	continue quit
+end quit
